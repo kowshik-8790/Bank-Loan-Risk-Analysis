@@ -62,4 +62,5 @@ df.to_sql('loan_applications', conn, if_exists='replace', index=False)
 conn.close()
 
 df.to_json('loans_data.json', orient='records')
-print("Exported bank_loans.db and loans_data.json successfully.")
+df.to_csv('loans_data.csv', index=False)
+print("Exported bank_loans.db, loans_data.csv, and loans_data.json successfully.")
