@@ -1,0 +1,19 @@
+{
+  "python.defaultInterpreterPath": "python",
+  "python.analysis.typeCheckingMode": "basic",
+  "python.analysis.autoImportCompletions": true,
+  "files.associations": {
+    "*.dax": "dax",
+    "*.sql": "sql"
+  },
+  "sqltools.connections": [
+    {
+      "name": "Bank Loan Risk DB",
+      "dialect": "MySQL",
+      "server": "localhost",
+      "port": 3306,
+      "database": "bank_loan_risk_db",
+      "username": "root"
+    }
+  ]
+}

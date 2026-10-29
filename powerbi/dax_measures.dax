@@ -1,0 +1,176 @@
+// ============================================================================
+// DAX MEASURES LIBRARY FOR BANK LOAN RISK ANALYSIS
+// Model: Bank Loan Risk Star Schema
+// Fact Table: fact_loans
+// Dimensions: dim_borrowers, dim_geography, dim_date
+// ============================================================================
+
+// ----------------------------------------------------------------------------
+// 1. CORE UNDERWRITING & VOLUME KPIS
+// ----------------------------------------------------------------------------
+
+Total Loan Applications = 
+COUNT(fact_loans[application_id])
+
+Total Approved Loans = 
+CALCULATE(
+    COUNT(fact_loans[application_id]),
+    fact_loans[is_approved] = 1
+)
+
+Total Rejected Applications = 
+CALCULATE(
+    COUNT(fact_loans[application_id]),
+    fact_loans[is_approved] = 0
+)
+
+Approval Rate % = 
+DIVIDE(
+    [Total Approved Loans],
+    [Total Loan Applications],
+    0
+)
+
+Rejection Rate % = 
+DIVIDE(
+    [Total Rejected Applications],
+    [Total Loan Applications],
+    0
+)
+
+Total Capital Funded = 
+SUM(fact_loans[funded_amount])
+
+Average Funded Loan Amount = 
+CALCULATE(
+    AVERAGE(fact_loans[funded_amount]),
+    fact_loans[is_approved] = 1
+)
+
+Total Cash Payments Collected = 
+SUM(fact_loans[total_payment])
+
+Average Applicant Annual Income = 
+CALCULATE(
+    AVERAGE(dim_borrowers[annual_income]),
+    USERELATIONSHIP(fact_loans[borrower_id], dim_borrowers[borrower_id])
+)
+
+Average Debt-to-Income (DTI) % = 
+AVERAGE(fact_loans[dti])
+
+Average Borrower FICO Score = 
+AVERAGE(fact_loans[fico_score])
+
+
+// ----------------------------------------------------------------------------
+// 2. CREDIT RISK & GOOD VS BAD LOAN METRICS
+// ----------------------------------------------------------------------------
+
+Good Loans Count = 
+CALCULATE(
+    COUNT(fact_loans[application_id]),
+    fact_loans[loan_quality] = "Good Loan"
+)
+
+Good Loans Funded Capital = 
+CALCULATE(
+    SUM(fact_loans[funded_amount]),
+    fact_loans[loan_quality] = "Good Loan"
+)
+
+Good Loans Ratio % = 
+DIVIDE(
+    [Good Loans Count],
+    [Total Approved Loans],
+    0
+)
+
+Bad Loans (Default) Count = 
+CALCULATE(
+    COUNT(fact_loans[application_id]),
+    fact_loans[is_default] = 1
+)
+
+Bad Loans Funded Capital = 
+CALCULATE(
+    SUM(fact_loans[funded_amount]),
+    fact_loans[is_default] = 1
+)
+
+Portfolio Default Rate % = 
+DIVIDE(
+    [Bad Loans (Default) Count],
+    [Total Approved Loans],
+    0
+)
+
+Total Net Realized Credit Loss = 
+SUM(fact_loans[net_loss_amount])
+
+Capital Loss Rate % = 
+DIVIDE(
+    [Total Net Realized Credit Loss],
+    [Total Capital Funded],
+    0
+)
+
+
+// ----------------------------------------------------------------------------
+// 3. PERIOD-OVER-PERIOD TIME INTELLIGENCE
+// ----------------------------------------------------------------------------
+
+Funded Capital Prior Month (PM) = 
+CALCULATE(
+    [Total Capital Funded],
+    DATEADD(dim_date[date_id], -1, MONTH)
+)
+
+MoM Funded Capital Growth % = 
+DIVIDE(
+    [Total Capital Funded] - [Funded Capital Prior Month (PM)],
+    [Funded Capital Prior Month (PM)],
+    BLANK()
+)
+
+Funded Capital Prior Year (PY) = 
+CALCULATE(
+    [Total Capital Funded],
+    SAMEPERIODLASTYEAR(dim_date[date_id])
+)
+
+YoY Funded Capital Growth % = 
+DIVIDE(
+    [Total Capital Funded] - [Funded Capital Prior Year (PY)],
+    [Funded Capital Prior Year (PY)],
+    BLANK()
+)
+
+Funded Capital YTD = 
+TOTALYTD(
+    [Total Capital Funded],
+    dim_date[date_id]
+)
+
+
+// ----------------------------------------------------------------------------
+// 4. DYNAMIC FORMATTING & RISK STATUS INDICATORS
+// ----------------------------------------------------------------------------
+
+Credit Risk Health Status = 
+SWITCH(
+    TRUE(),
+    [Portfolio Default Rate %] <= 0.08, "Low Portfolio Risk (<= 8%)",
+    [Portfolio Default Rate %] <= 0.14, "Moderate Portfolio Risk (8-14%)",
+    [Portfolio Default Rate %] <= 0.20, "Elevated Credit Risk (14-20%)",
+    "Critical Default Risk (> 20%)"
+)
+
+KPI Default Color Indicator = 
+SWITCH(
+    TRUE(),
+    [Portfolio Default Rate %] <= 0.08, "#10B981", // Green
+    [Portfolio Default Rate %] <= 0.14, "#0284C7", // Blue
+    [Portfolio Default Rate %] <= 0.20, "#F59E0B", // Amber
+    "#EF4444"                                      // Red
+)

@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bank Loan Risk Analysis Dashboard</title>
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <div class="dashboard-container">
+    <!-- Header -->
+    <header class="dashboard-header">
+      <div class="header-branding">
+        <div class="brand-badge">POWER BI EMBEDDED PREVIEW</div>
+        <h1>Bank Loan Risk Analysis Dashboard</h1>
+        <p class="subtitle">Underwriting Performance, Credit Risk Stratification & Portfolio Analytics • Python, MySQL, Power BI & Excel</p>
+      </div>
+
+      <!-- Filters -->
+      <div class="filter-controls">
+        <div class="filter-item">
+          <label for="gradeFilter">Risk Grade:</label>
+          <select id="gradeFilter">
+            <option value="All">All Grades (A - F)</option>
+            <option value="A">Grade A (Prime)</option>
+            <option value="B">Grade B (Near-Prime)</option>
+            <option value="C">Grade C (Moderate)</option>
+            <option value="D">Grade D (Subprime)</option>
+            <option value="E">Grade E (High Risk)</option>
+            <option value="F">Grade F (Critical Risk)</option>
+          </select>
+        </div>
+
+        <div class="filter-item">
+          <label for="purposeFilter">Loan Purpose:</label>
+          <select id="purposeFilter">
+            <option value="All">All Purposes</option>
+            <option value="debt_consolidation">Debt Consolidation</option>
+            <option value="credit_card">Credit Card Refinance</option>
+            <option value="home_improvement">Home Improvement</option>
+            <option value="small_business">Small Business</option>
+          </select>
+        </div>
+
+        <div class="filter-item">
+          <label for="termFilter">Term:</label>
+          <select id="termFilter">
+            <option value="All">All Terms</option>
+            <option value="36 months">36 Months</option>
+            <option value="60 months">60 Months</option>
+          </select>
+        </div>
+
+        <button id="resetBtn" class="reset-btn">Reset Filters</button>
+      </div>
+    </header>
+
+    <!-- KPI Summary Grid -->
+    <section class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-header">
+          <span class="kpi-title">TOTAL APPLICATIONS</span>
+          <span class="kpi-badge blue">Vol: 10,000</span>
+        </div>
+        <div class="kpi-value" id="kpiApps">10,000</div>
+        <div class="kpi-subtext">Completed loan submissions</div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-header">
+          <span class="kpi-title">APPROVAL RATE</span>
+          <span class="kpi-badge positive">96.85%</span>
+        </div>
+        <div class="kpi-value text-green" id="kpiApprovalRate">96.85%</div>
+        <div class="kpi-subtext">Rejection Rate: 3.15%</div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-header">
+          <span class="kpi-title">TOTAL FUNDED CAPITAL</span>
+          <span class="kpi-badge gold">Disbursed</span>
+        </div>
+        <div class="kpi-value" id="kpiFunded">$190.82M</div>
+        <div class="kpi-subtext">Avg Funded: $19,702.99</div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-header">
+          <span class="kpi-title">CASH COLLECTED</span>
+          <span class="kpi-badge positive">Recovered</span>
+        </div>
+        <div class="kpi-value text-green" id="kpiCollected">$168.83M</div>
+        <div class="kpi-subtext">Principal + Interest</div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-header">
+          <span class="kpi-title">PORTFOLIO DEFAULT RATE</span>
+          <span class="kpi-badge danger">Target: &lt;10%</span>
+        </div>
+        <div class="kpi-value text-red" id="kpiDefaultRate">13.83%</div>
+        <div class="kpi-subtext">1,339 Charged Off Loans</div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-header">
+          <span class="kpi-title">NET REALIZED LOSS</span>
+          <span class="kpi-badge danger">Write-Off</span>
+        </div>
+        <div class="kpi-value text-red" id="kpiLoss">$18.19M</div>
+        <div class="kpi-subtext">9.53% of Capital Funded</div>
+      </div>
+    </section>
+
+    <!-- Charts Section -->
+    <section class="charts-grid">
+      <!-- Monthly Lending Trend -->
+      <div class="chart-card span-2">
+        <div class="chart-header">
+          <h3>Monthly Capital Funded & Default Rate Progression</h3>
+          <span class="chart-desc">Historical origination volume and charge-off progression</span>
+        </div>
+        <div class="canvas-container">
+          <canvas id="monthlyTrendChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Good vs Bad Loans Share -->
+      <div class="chart-card">
+        <div class="chart-header">
+          <h3>Loan Quality Distribution</h3>
+          <span class="chart-desc">Capital share of Good Loans vs Defaults</span>
+        </div>
+        <div class="canvas-container">
+          <canvas id="loanQualityDonutChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Default Rate by Grade -->
+      <div class="chart-card">
+        <div class="chart-header">
+          <h3>Default Rate by Risk Grade</h3>
+          <span class="chart-desc">Default risk surges exponentially from Grade A to F</span>
+        </div>
+        <div class="canvas-container">
+          <canvas id="gradeDefaultChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Risk Grade Matrix Table -->
+      <div class="chart-card span-2">
+        <div class="chart-header">
+          <h3>Credit Risk Stratification Matrix (Grades A - F)</h3>
+          <span class="chart-desc">Granular risk breakdown across funded volume, pricing, and loss rates</span>
+        </div>
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Grade</th>
+                <th>Loans Funded</th>
+                <th>Funded Capital</th>
+                <th>Avg Rate</th>
+                <th>Avg FICO</th>
+                <th>Default Count</th>
+                <th>Default Rate</th>
+                <th>Net Realized Loss</th>
+                <th>Risk Tier</th>
+              </tr>
+            </thead>
+            <tbody id="gradeTableBody">
+              <!-- Dynamically populated -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- Actionable Insights Banner -->
+    <section class="insights-card">
+      <div class="insights-header">
+        <span class="insight-icon">🏦</span>
+        <h3>Actionable Risk Mitigation & Credit Policy Recommendations</h3>
+      </div>
+      <div class="insights-grid">
+        <div class="insight-item">
+          <strong>1. Subprime Exposure Curtailment (Grades E & F):</strong>
+          <p>Grades E and F carry <strong>34.7% and 42.3% default rates</strong>, contributing $7.85M in write-offs. Tightening minimum FICO cutoff from 580 to 620 will prevent 62% of catastrophic defaults while reducing overall lending volume by only 6.8%.</p>
+        </div>
+        <div class="insight-item">
+          <strong>2. Debt-to-Income (DTI) Governance:</strong>
+          <p>Borrowers with DTI &gt; 30% exhibit a <strong>2.8x higher default rate</strong> compared to low-DTI borrowers (&lt;15%). Requiring manual underwriter sign-off or secondary collateral for DTI &gt; 28% will save an estimated $3.2M annually.</p>
+        </div>
+        <div class="insight-item">
+          <strong>3. Risk-Adjusted Pricing Recalibration:</strong>
+          <p>Grade D loans average a 19.54% interest rate but experience a 24.74% charge-off rate, resulting in negative net interest margin (NIM). Increasing Grade D risk premiums by 175 bps will restore risk-adjusted returns to target profitability.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="dashboard-footer">
+      <span>Bank Loan Risk Analysis Portfolio • Tech Stack: Python (Pandas, NumPy), MySQL 8.0, Power BI, Microsoft Excel</span>
+      <span>Live Interactive Preview</span>
+    </footer>
+  </div>
+
+  <script src="dashboard.js"></script>
+</body>
+</html>
